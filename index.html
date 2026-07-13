@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 <title>The landmarking of New York — 60 years of historic districts</title>
-<meta name="description" content="An animated map of all 141 New York City historic districts and the years they were declared, from Brooklyn Heights in 1965 to today." />
+<meta name="description" content="An animated map of all 159 New York City historic districts and extensions and the years they were declared, from Brooklyn Heights in 1965 to today." />
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -187,7 +187,7 @@
 <header id="mast">
   <p class="kicker">Sixty years of preservation</p>
   <h1>The landmarking of New York</h1>
-  <p>The city's historic districts, mapped and dated from Brooklyn Heights in 1965 onward — 141 areas covering some 4,180 acres. Press play to watch the map fill in.</p>
+  <p>All 159 historic districts and extensions the Landmarks Preservation Commission has declared since 1965 — some 4,570 acres, from Brooklyn Heights onward. Press play to watch the map fill in.</p>
   <div class="btns">
     <button class="ghost" id="aboutBtn">About &amp; sources</button>
     <button class="ghost" id="resetBtn">Restart</button>
@@ -199,7 +199,7 @@
 <div id="readout">
   <div id="year">1965</div>
   <div id="acres"><b id="acresNum">0</b> acres landmarked</div>
-  <div id="tally"><b id="count">0</b> of 141 districts · <span id="sqmi">0.0</span> sq mi</div>
+  <div id="tally"><b id="count">0</b> of 159 districts · <span id="sqmi">0.0</span> sq mi</div>
   <div id="latest"></div>
 </div>
 
@@ -242,23 +242,23 @@
   <div class="card">
     <button class="close" id="aboutClose">×</button>
     <h2>The landmarking of New York</h2>
-    <p class="sub">An animated map of the city's historic-district boundaries — 141 mapped areas — and when each was declared.</p>
+    <p class="sub">An animated map of all 159 of the city's historic districts and extensions, and when each was declared.</p>
 
     <h4>What this shows</h4>
     <p>Each shape is a New York City <b>historic district</b> — an area the Landmarks Preservation Commission (LPC) has designated so that changes to its buildings are regulated. Districts light up on the map in the order they were declared, colored by the decade of designation. Hover a district for its name, year and size; click it to pin the panel and open its LPC designation report and Wikipedia page. This map covers only <b>designated, currently active</b> historic districts — not individual landmarks, scenic landmarks, interior landmarks, or areas that were merely proposed.</p>
 
-    <h4>The count (why it isn't a round number)</h4>
-    <p>This map draws the <b>141 distinct historic-district areas</b> in the LPC's current mapping layer, declared between Nov. 23, 1965 (Brooklyn Heights, the first, about seven months after the Landmarks Law of April 1965) and Nov. 25, 2025. By borough: Manhattan 70, Brooklyn 42, Queens and The Bronx 13 each, Staten Island 3.</p>
-    <p>The LPC's own tally is a bit higher — it has cited roughly <b>150 historic districts</b> (2024) and <b>159 "historic districts and extensions"</b> (late 2025). The difference is a counting convention: the commission tallies each designation action separately, while its mapping layer folds many later <b>extensions</b> back into the parent district's boundary. So 141 is the number of separate shapes you can see and click here, not a claim about the LPC's official count. (Thirteen extensions do appear as their own shapes and dates where the layer keeps them separate.)</p>
+    <h4>The count</h4>
+    <p>This map draws all <b>159 historic districts and extensions</b> the commission has designated and keeps active — matching the LPC's own published count — declared between Nov. 23, 1965 (Brooklyn Heights, the first, about seven months after the Landmarks Law of April 1965) and Nov. 25, 2025. By borough: Manhattan 82, Brooklyn 47, Queens 14, The Bronx 13, Staten Island 3.</p>
+    <p><b>25</b> of the 159 are <b>extensions</b> of an earlier district, each carrying its own, later designation date and drawn as its own shape — so a district and its extensions light up in different years. (An earlier version of this map used NYC Open Data's consolidated export, which shows only 141 shapes because it omits about 18 extensions; this version uses the LPC's live mapping layer, which breaks every one out.)</p>
 
     <h4>Acres landmarked</h4>
-    <p>The running acreage is the summed land area of every district shown, computed from the boundary polygons (shoelace area on the source State Plane coordinates, converted at 43,560 sq ft per acre). It matches the LPC dataset's own <code>shape_area</code> field to within 0.01%. All 141 districts together cover <b>≈ 4,179 acres, about 6.5 square miles</b> — roughly the size of Central Park eight times over. Extensions don't overlap their parent districts, so nothing is double-counted.</p>
+    <p>The running acreage is the summed land area of every district shown, computed as the true <b>geodesic area</b> of each boundary polygon on the WGS84 ellipsoid. All 159 districts together cover <b>≈ 4,574 acres, about 7.1 square miles</b> — roughly eight times the size of Central Park. A handful of older districts sit partly inside larger ones (e.g. Carnegie Hill within the Expanded Carnegie Hill district), so about 16 acres are counted in two districts; the unique protected land is closer to <b>4,557 acres</b>.</p>
 
     <h4>Sources</h4>
-    <p>Boundaries, designation dates and district names come from the LPC <a href="https://data.cityofnewyork.us/Housing-Development/Historic-Districts-Map-/xbvj-gfnw" target="_blank" rel="noopener">Historic Districts</a> dataset on NYC Open Data (dataset <code>skyk-mpzq</code>), filtered to records where status is "designated" and the boundary is current. The LPC's headline counts are from its own materials (via the <a href="https://en.wikipedia.org/wiki/New_York_City_Landmarks_Preservation_Commission" target="_blank" rel="noopener">commission's Wikipedia summary</a> and 2025 designation announcements). "Designation report" links open the commission's official PDF for each district at s-media.nyc.gov; "Wikipedia" links run a title search. Base map tiles: OpenStreetMap contributors and CARTO.</p>
+    <p>Boundaries, designation dates, district names and the official report links come straight from the LPC's <b>own live ArcGIS layer</b> (<code>Historic_Districts_LPC</code>) — the data behind the commission's official <a href="https://www.landmarks.nyc/" target="_blank" rel="noopener">Discover NYC Landmarks</a> map, reached from the LPC <a href="https://www.nyc.gov/site/lpc/designations/maps.page" target="_blank" rel="noopener">maps page</a>. "Designation report" links open the commission's official PDF for each district; "Wikipedia" links run a title search. Base map tiles: OpenStreetMap contributors and CARTO.</p>
 
     <h4>Notes &amp; caveats</h4>
-    <p>The designation date shown is the day the commission voted to designate the area as drawn. Where a district was later extended and the map layer merged that extension into the parent boundary, the whole current shape carries the <b>original</b> designation year — so a few districts appear larger, and earlier, than a strict "as first designated" map would show. Boundary polygons are derived by the LPC primarily from Department of City Planning tax-lot data and are simplified slightly here for the web (coordinates rounded to five decimals). Some designations have complicated histories (amended, re-designated or overturned); this map reflects the boundary the LPC currently marks as active.</p>
+    <p>The designation date shown is the day the commission voted to designate each area. Boundary polygons are derived by the LPC primarily from Department of City Planning tax-lot data and are simplified slightly here for the web (coordinates rounded to five decimals). Some designations have complicated histories (amended, re-designated or overturned); this map reflects only the districts the LPC currently marks as designated and active.</p>
 
     <div class="aicaution"><b>A note on AI:</b> This map was built with the help of AI. The underlying data is straight from the city's Landmarks Preservation Commission, but the processing and code have not been exhaustively hand-audited. Check any figure against the source dataset before relying on it.</div>
   </div>
@@ -439,7 +439,7 @@ function fillDetail(i){const p=FEATS[i].properties;
   $('dName').textContent=p.name;
   $('dMeta').innerHTML=`Landmarked <b>${apDate(p.date)}</b><br><b>${fmtAcres(p.acres)}</b> acres · Designation <b>${p.lp||'—'}</b>`;
   $('dExt').innerHTML=p.ext?'<span class="ext">Extension of an earlier district</span>':'';
-  const u=reportURL(p.lp),a=$('dReport');
+  const u=p.report||reportURL(p.lp),a=$('dReport');
   if(u){a.href=u;a.style.display='';}else{a.style.display='none';}
   $('dWiki').href='https://en.wikipedia.org/w/index.php?search='+encodeURIComponent(p.name);
 }
