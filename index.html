@@ -105,40 +105,35 @@
   #legend .chip{width:20px;height:9px;border-radius:2px}
 
   /* ---- Detail panel ---- */
-  #detail{position:absolute;left:22px;bottom:138px;z-index:650;width:min(330px,84vw);
-    background:var(--panel-solid);border:1px solid var(--line);border-radius:12px;
-    padding:16px 18px;display:none;box-shadow:0 18px 50px rgba(0,0,0,.6)}
-  #detail.on{display:block}
-  #detail .close{position:absolute;top:10px;right:12px;background:none;border:none;
-    color:var(--paper-dim);font-size:20px;cursor:pointer;line-height:1}
-  #detail .dboro{font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:600}
-  #detail h3{font-family:'Fraunces',serif;font-weight:600;font-size:21px;line-height:1.12;
-    margin:6px 0 10px;padding-right:16px}
-  #detail .dmeta{font-size:13px;color:var(--paper-dim);line-height:1.7}
-  #detail .dmeta b{color:var(--paper);font-weight:600}
-  #detail .ext{display:inline-block;margin-top:8px;font-size:10.5px;letter-spacing:.08em;
-    text-transform:uppercase;color:var(--amber);border:1px solid rgba(242,177,52,.4);
-    border-radius:4px;padding:2px 7px;font-weight:600}
-  #detail .dlinks{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
-  #detail a.report{display:inline-block;font-size:12.5px;font-weight:600;
-    color:#1a1206;background:var(--amber);padding:8px 12px;border-radius:7px;text-decoration:none}
-  #detail a.report:hover{background:#f7c65a}
-  #detail a.report.alt{color:#e9d9b3;background:transparent;border:1px solid var(--line)}
-  #detail a.report.alt:hover{background:#241f18;color:#fff}
-  #detail .dhint{margin-top:12px;font-size:11px;color:#8a7d63;letter-spacing:.02em}
-  #detail .close{display:none}
-  #detail.pinned .close{display:block}
-  #detail.pinned .dhint{display:none}
+  /* ---- District hover popup (interactive: links are clickable) ---- */
+  .hd-pop .leaflet-popup-content-wrapper{background:var(--panel-solid);color:var(--paper);
+    border:1px solid rgba(233,206,158,.28);border-radius:11px;box-shadow:0 14px 40px rgba(0,0,0,.65)}
+  .hd-pop .leaflet-popup-content{margin:13px 15px;font-family:'Archivo',sans-serif;line-height:1.4}
+  .hd-pop .leaflet-popup-tip{background:var(--panel-solid);border:1px solid rgba(233,206,158,.28)}
+  .hd-pop a.leaflet-popup-close-button{color:var(--paper-dim);padding:6px 7px 0 0}
+  .hd-pop a.leaflet-popup-close-button:hover{color:#fff}
+  .pop .p-boro{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700}
+  .pop .p-name{font-family:'Fraunces',serif;font-weight:600;font-size:17px;line-height:1.14;
+    margin:4px 0 7px;padding-right:10px;color:var(--paper)}
+  .pop .p-meta{font-size:12.5px;color:var(--paper-dim);line-height:1.55}
+  .pop .p-meta b{color:var(--paper);font-weight:700}
+  .pop .p-links{display:flex;gap:7px;margin-top:11px;flex-wrap:wrap}
+  .pop .p-links a{font-size:12px;font-weight:600;text-decoration:none;border-radius:6px;padding:6px 10px}
+  .pop .p-links a:first-child{color:#1a1206;background:var(--amber)}
+  .pop .p-links a:first-child:hover{background:#f7c65a}
+  .pop .p-links a:last-child{color:#e9d9b3;background:transparent;border:1px solid var(--line)}
+  .pop .p-links a:last-child:hover{background:#241f18;color:#fff}
 
-  /* hover tooltip on districts */
-  .leaflet-tooltip.hd-tip{background:#14110e;border:1px solid rgba(233,206,158,.28);
-    color:var(--paper);border-radius:8px;padding:8px 11px;box-shadow:0 10px 30px rgba(0,0,0,.6);
-    font-family:'Archivo',sans-serif;white-space:nowrap;max-width:260px}
-  .leaflet-tooltip.hd-tip:before{display:none}
-  .hd-tip .t-name{font-weight:700;font-size:13.5px;color:var(--paper);white-space:normal}
-  .hd-tip .t-meta{font-size:12px;color:var(--paper-dim);margin-top:2px}
-  .hd-tip .t-meta b{color:var(--amber);font-weight:700}
-  .hd-tip .t-cta{font-size:10.5px;color:#8a7d63;margin-top:4px;letter-spacing:.02em}
+  /* ---- Zoom control (bottom-right, lifted above the dock, themed) ---- */
+  .leaflet-bottom.leaflet-right{bottom:104px;right:14px}
+  .leaflet-bar{border:none;box-shadow:0 6px 20px rgba(0,0,0,.5)}
+  .leaflet-bar a{width:38px;height:38px;line-height:38px;font-size:20px;
+    background:var(--panel-solid);color:var(--amber);
+    border:1px solid var(--line);border-bottom-width:0}
+  .leaflet-bar a:last-child{border-bottom-width:1px}
+  .leaflet-bar a:first-child{border-radius:9px 9px 0 0}
+  .leaflet-bar a:last-child{border-radius:0 0 9px 9px}
+  .leaflet-bar a:hover{background:#241f18;color:#fff}
 
   /* ---- About modal ---- */
   #about{position:absolute;inset:0;z-index:900;background:rgba(6,5,4,.82);
@@ -175,9 +170,9 @@
     .boro .nm{display:none}
     #readout{bottom:176px;left:16px}
     #year{font-size:clamp(48px,16vw,72px)}
-    #detail{bottom:auto;top:64px;left:50%;transform:translateX(-50%);width:92vw}
     #legend{padding-left:0;justify-content:center}
     #speedwrap{display:none}
+    .leaflet-bottom.leaflet-right{bottom:150px}
   }
 </style>
 </head>
@@ -202,19 +197,6 @@
   <div id="tally"><b id="count">0</b> of 159 districts · <span id="sqmi">0.0</span> sq mi</div>
   <div id="latest"></div>
 </div>
-
-<aside id="detail">
-  <button class="close" id="detailClose">×</button>
-  <div class="dboro" id="dBoro"></div>
-  <h3 id="dName"></h3>
-  <div class="dmeta" id="dMeta"></div>
-  <div id="dExt"></div>
-  <div class="dlinks">
-    <a class="report" id="dReport" target="_blank" rel="noopener">Designation report&nbsp;↗</a>
-    <a class="report alt" id="dWiki" target="_blank" rel="noopener">Wikipedia&nbsp;↗</a>
-  </div>
-  <div class="dhint" id="dHint">Click the district to keep this open</div>
-</aside>
 
 <div id="dock">
   <div id="controls">
@@ -277,9 +259,9 @@ function reportURL(lp){if(!lp)return null;const n=parseInt(String(lp).replace(/[
 function fmtAcres(a){return a>=10?Math.round(a).toLocaleString('en-US'):a.toFixed(1);}
 function toNum(iso){const [y,m,d]=iso.split('-').map(Number);return y+(m-1)/12+(d-1)/365;} // fractional year
 
-const map=L.map('map',{zoomControl:true,attributionControl:true,minZoom:10,maxZoom:17,
-  zoomSnap:.25,preferCanvas:false}).setView([40.718,-73.98],11.4);
-L.control.zoom({position:'topright'});
+const map=L.map('map',{zoomControl:false,attributionControl:true,minZoom:10,maxZoom:17,
+  zoomSnap:.25,scrollWheelZoom:true,preferCanvas:false}).setView([40.718,-73.98],11.4);
+L.control.zoom({position:'bottomright'}).addTo(map);
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
   attribution:'&copy; OpenStreetMap contributors &copy; CARTO · Data: NYC Landmarks Preservation Commission',
   subdomains:'abcd',maxZoom:19,className:'warm-tiles'}).addTo(map);
@@ -301,20 +283,23 @@ fetch('districts.json').then(r=>r.json()).then(gj=>{
   geoLayer=L.geoJSON(gj,{style:styleFor,onEachFeature:(feat,layer)=>{
     const i=feat.properties._i, p=feat.properties;
     layersByIdx[i]=layer;
-    layer.bindTooltip(
-      `<div class="t-name">${p.name}</div>`+
-      `<div class="t-meta">Landmarked <b>${p.year}</b> · ${fmtAcres(p.acres)} acres</div>`+
-      `<div class="t-meta">${p.boro}</div>`+
-      `<div class="t-cta">click for reports &amp; history</div>`,
-      {sticky:true,direction:'top',className:'hd-tip',opacity:1});
-    layer.on('mouseover',()=>showDetail(i));
-    layer.on('mouseout',scheduleHide);
-    layer.on('click',e=>{L.DomEvent.stop(e);pinDetail(i);});
+    layer.bindPopup(popupHTML(p),{className:'hd-pop',maxWidth:250,minWidth:190,
+      autoPan:false,closeButton:true,offset:[0,-2]});
+    // hover to open (with intent delay so links stay reachable); tap opens on touch
+    layer.on('mouseover',e=>{if(hideTimer){clearTimeout(hideTimer);hideTimer=null;}
+      hovered=i;restyleOne(i);
+      if(pinned===null && !layer.isPopupOpen()) layer.openPopup(e.latlng);});
+    layer.on('mousemove',e=>{if(pinned===null && layer.isPopupOpen()) layer.getPopup().setLatLng(e.latlng);});
+    layer.on('mouseout',()=>{const h=hovered;hovered=null;if(h!=null)restyleOne(h);
+      if(pinned!==i) scheduleClose(layer);});
+    layer.on('click',e=>{L.DomEvent.stop(e);pinned=i;hovered=i;restyleOne(i);
+      layer.openPopup(e.latlng);});
+    layer.on('popupclose',()=>{if(pinned===i){pinned=null;restyleOne(i);}});
   }}).addTo(map);
-  map.on('click',closeDetail);
-  const dp=$('detail');
-  dp.addEventListener('mouseenter',()=>{if(hideTimer){clearTimeout(hideTimer);hideTimer=null;}});
-  dp.addEventListener('mouseleave',scheduleHide);
+  // cancel auto-close while the cursor is over the popup itself (so you can click links)
+  map.on('popupopen',e=>{const el=e.popup.getElement();if(!el)return;
+    el.addEventListener('mouseenter',()=>{if(hideTimer){clearTimeout(hideTimer);hideTimer=null;}});
+    el.addEventListener('mouseleave',()=>{if(pinned===null)scheduleClose(e.popup._source);});});
   updateAll();
   loop();
   // robustness: full-screen Leaflet maps can init before layout settles or while backgrounded
@@ -433,24 +418,22 @@ function drawPlayhead(){if(!playhead)return;const x=showAll?yearX(END-0.001):yea
   playhead.querySelector('.ph-h').setAttribute('cx',x);
   playhead.style.opacity=showAll?0:1;}
 
-/* ---------- detail (hover to preview, click to pin) ---------- */
-function fillDetail(i){const p=FEATS[i].properties;
-  $('dBoro').textContent=p.boro;$('dBoro').style.color=BORO_COLORS[p.boro]||'#f2b134';
-  $('dName').textContent=p.name;
-  $('dMeta').innerHTML=`Landmarked <b>${apDate(p.date)}</b><br><b>${fmtAcres(p.acres)}</b> acres · Designation <b>${p.lp||'—'}</b>`;
-  $('dExt').innerHTML=p.ext?'<span class="ext">Extension of an earlier district</span>':'';
-  const u=p.report||reportURL(p.lp),a=$('dReport');
-  if(u){a.href=u;a.style.display='';}else{a.style.display='none';}
-  $('dWiki').href='https://en.wikipedia.org/w/index.php?search='+encodeURIComponent(p.name);
+/* ---------- district popup (hover to open, click to pin; links are clickable) ---------- */
+function popupHTML(p){
+  const rpt=p.report||reportURL(p.lp);
+  const wiki='https://en.wikipedia.org/w/index.php?search='+encodeURIComponent(p.name);
+  const dot=BORO_COLORS[p.boro]||'#f2b134';
+  return `<div class="pop">`+
+    `<div class="p-boro" style="color:${dot}">${p.boro}${p.ext?' · extension':''}</div>`+
+    `<div class="p-name">${p.name}</div>`+
+    `<div class="p-meta">Designated <b>${apDate(p.date)}</b><br>${fmtAcres(p.acres)} acres · ${p.lp||''}</div>`+
+    `<div class="p-links">`+
+      (rpt?`<a href="${rpt}" target="_blank" rel="noopener">Designation report ↗</a>`:``)+
+      `<a href="${wiki}" target="_blank" rel="noopener">More info ↗</a>`+
+    `</div></div>`;
 }
-function showDetail(i){if(hideTimer){clearTimeout(hideTimer);hideTimer=null;}
-  hovered=i;fillDetail(i);$('detail').classList.add('on');restyleOne(i);}
-function scheduleHide(){if(pinned!==null)return;
-  hideTimer=setTimeout(()=>{$('detail').classList.remove('on');const h=hovered;hovered=null;if(h!=null)restyleOne(h);},260);}
-function pinDetail(i){pinned=i;showDetail(i);$('detail').classList.add('pinned');restyleAll();}
-function closeDetail(){if(pinned!==null){const p=pinned;pinned=null;
-  $('detail').classList.remove('on','pinned');hovered=null;restyleAll();}}
-$('detailClose').onclick=e=>{e.stopPropagation();closeDetail();};
+function scheduleClose(layer){if(hideTimer)clearTimeout(hideTimer);
+  hideTimer=setTimeout(()=>{if(layer&&layer.isPopupOpen&&layer.isPopupOpen())layer.closePopup();},280);}
 
 /* ---------- playback ---------- */
 const YEARS_PER_SEC_BASE=2.6; let last=performance.now();
@@ -491,7 +474,7 @@ $('speed').oninput=()=>{};
 $('aboutBtn').onclick=()=>$('about').classList.add('on');
 $('aboutClose').onclick=()=>$('about').classList.remove('on');
 $('about').addEventListener('click',e=>{if(e.target.id==='about')$('about').classList.remove('on');});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('about').classList.remove('on');closeDetail();}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('about').classList.remove('on');pinned=null;map.closePopup();}
   if(e.key===' '&&e.target.tagName!=='INPUT'){e.preventDefault();playing?pause():play();}});
 
 /* responsive timeline redraw */
