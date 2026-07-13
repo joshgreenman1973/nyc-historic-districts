@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>The landmarking of New York — 60 years of historic districts</title>
+<meta name="description" content="An animated map of all 141 New York City historic districts and the years they were declared, from Brooklyn Heights in 1965 to today." />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0a0908;
+    --panel:rgba(18,16,14,.82);
+    --panel-solid:#14110e;
+    --line:rgba(233,206,158,.16);
+    --paper:#f2e9d8;
+    --paper-dim:#b6a888;
+    --amber:#f2b134;
+    --ember:#c1440e;
+    --hot:#fbefb0;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--ink);color:var(--paper);
+    font-family:'Archivo',system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;overflow:hidden}
+  #map{position:absolute;inset:0;background:#0a0908;z-index:0}
+  /* warm archival tint on the dark basemap tiles */
+  .warm-tiles{filter:brightness(.72) contrast(1.05) sepia(.35) saturate(.85) hue-rotate(-8deg)}
+  .leaflet-container{background:#0a0908;font-family:'Archivo',sans-serif}
+  .leaflet-control-attribution{background:rgba(10,9,8,.7)!important;color:#8a7d63!important}
+  .leaflet-control-attribution a{color:#b6a888!important}
+  .leaflet-bar a{background:#14110e;color:#d9c9a3;border-color:rgba(233,206,158,.2)}
+  .leaflet-bar a:hover{background:#211c15}
+
+  /* ---- Masthead ---- */
+  #mast{position:absolute;top:0;left:0;z-index:600;max-width:min(46ch,92vw);
+    padding:20px 22px 26px;pointer-events:none;
+    background:linear-gradient(180deg,rgba(10,9,8,.92) 0%,rgba(10,9,8,.75) 55%,rgba(10,9,8,0) 100%)}
+  #mast .kicker{font-size:11px;letter-spacing:.28em;text-transform:uppercase;
+    color:var(--amber);font-weight:600;margin:0 0 8px}
+  #mast h1{font-family:'Fraunces',serif;font-weight:900;line-height:1.02;
+    font-size:clamp(28px,4.2vw,44px);margin:0 0 10px;letter-spacing:-.01em}
+  #mast p{margin:0;font-size:14px;line-height:1.5;color:var(--paper-dim);max-width:40ch}
+  #mast .btns{margin-top:14px;pointer-events:auto;display:flex;gap:8px;flex-wrap:wrap}
+  .ghost{font:inherit;font-size:12px;font-weight:600;letter-spacing:.02em;
+    color:#d9c9a3;background:rgba(30,26,20,.7);border:1px solid var(--line);
+    padding:7px 12px;border-radius:999px;cursor:pointer;backdrop-filter:blur(4px)}
+  .ghost:hover{background:#241f18;color:#fff}
+
+  /* ---- Year readout (center-ish, above timeline) ---- */
+  #readout{position:absolute;left:22px;bottom:150px;z-index:600;pointer-events:none;
+    text-shadow:0 2px 24px rgba(0,0,0,.8)}
+  #year{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(60px,11vw,120px);
+    line-height:.82;letter-spacing:-.02em;color:var(--paper);
+    font-variant-numeric:tabular-nums}
+  #tally{font-size:14px;color:var(--paper-dim);margin-top:6px;font-weight:500}
+  #tally b{color:var(--amber);font-weight:700;font-variant-numeric:tabular-nums}
+  #latest{font-size:13px;color:var(--hot);margin-top:2px;min-height:1.2em;
+    max-width:34ch;font-style:italic;opacity:.9}
+
+  /* ---- Borough tallies (right) ---- */
+  #boros{position:absolute;right:14px;top:80px;z-index:600;
+    display:flex;flex-direction:column;gap:6px;pointer-events:auto}
+  .boro{display:flex;align-items:center;gap:8px;justify-content:flex-end;
+    background:var(--panel);border:1px solid var(--line);border-radius:8px;
+    padding:6px 10px;font-size:12px;cursor:pointer;backdrop-filter:blur(6px);
+    transition:opacity .15s;min-width:132px}
+  .boro:hover{background:#211c15}
+  .boro.off{opacity:.34}
+  .boro .nm{color:var(--paper-dim);flex:1;text-align:left;font-weight:500}
+  .boro .ct{color:var(--paper);font-weight:700;font-variant-numeric:tabular-nums}
+  .boro .dot{width:9px;height:9px;border-radius:50%}
+
+  /* ---- Timeline dock ---- */
+  #dock{position:absolute;left:0;right:0;bottom:0;z-index:600;
+    padding:10px 16px 14px;
+    background:linear-gradient(0deg,rgba(10,9,8,.96) 0%,rgba(10,9,8,.85) 70%,rgba(10,9,8,0) 100%)}
+  #controls{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+  #play{width:44px;height:44px;flex:0 0 auto;border-radius:50%;border:1px solid var(--line);
+    background:var(--amber);color:#1a1206;font-size:18px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;transition:transform .1s}
+  #play:hover{transform:scale(1.06)}
+  #play:active{transform:scale(.96)}
+  #tl-wrap{flex:1;position:relative}
+  #tl{width:100%;height:62px;display:block;cursor:pointer;touch-action:none}
+  #speedwrap{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--paper-dim);
+    flex:0 0 auto}
+  #speed{accent-color:var(--amber);width:78px}
+  #showall{font:inherit;font-size:11px;font-weight:600;color:#d9c9a3;
+    background:rgba(30,26,20,.7);border:1px solid var(--line);padding:7px 11px;
+    border-radius:999px;cursor:pointer;flex:0 0 auto}
+  #showall:hover{background:#241f18;color:#fff}
+  #showall.active{background:var(--amber);color:#1a1206;border-color:var(--amber)}
+
+  /* ---- Legend ---- */
+  #legend{display:flex;align-items:center;gap:2px;flex-wrap:wrap;
+    font-size:10.5px;color:var(--paper-dim);padding-left:56px}
+  #legend .lbl{margin-right:8px;letter-spacing:.04em;text-transform:uppercase;font-weight:600;color:#8a7d63}
+  #legend .sw{display:flex;align-items:center;gap:5px;margin-right:12px}
+  #legend .chip{width:20px;height:9px;border-radius:2px}
+
+  /* ---- Detail panel ---- */
+  #detail{position:absolute;left:22px;bottom:150px;z-index:650;width:min(330px,84vw);
+    background:var(--panel-solid);border:1px solid var(--line);border-radius:12px;
+    padding:16px 18px;display:none;box-shadow:0 18px 50px rgba(0,0,0,.6)}
+  #detail.on{display:block}
+  #detail .close{position:absolute;top:10px;right:12px;background:none;border:none;
+    color:var(--paper-dim);font-size:20px;cursor:pointer;line-height:1}
+  #detail .dboro{font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:600}
+  #detail h3{font-family:'Fraunces',serif;font-weight:600;font-size:21px;line-height:1.12;
+    margin:6px 0 10px;padding-right:16px}
+  #detail .dmeta{font-size:13px;color:var(--paper-dim);line-height:1.7}
+  #detail .dmeta b{color:var(--paper);font-weight:600}
+  #detail .ext{display:inline-block;margin-top:8px;font-size:10.5px;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--amber);border:1px solid rgba(242,177,52,.4);
+    border-radius:4px;padding:2px 7px;font-weight:600}
+  #detail a.report{display:inline-block;margin-top:14px;font-size:13px;font-weight:600;
+    color:#1a1206;background:var(--amber);padding:8px 13px;border-radius:7px;text-decoration:none}
+  #detail a.report:hover{background:#f7c65a}
+
+  /* ---- About modal ---- */
+  #about{position:absolute;inset:0;z-index:900;background:rgba(6,5,4,.82);
+    display:none;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(3px)}
+  #about.on{display:flex}
+  #about .card{background:var(--panel-solid);border:1px solid var(--line);border-radius:14px;
+    max-width:640px;max-height:86vh;overflow:auto;padding:30px 34px}
+  #about h2{font-family:'Fraunces',serif;font-weight:900;font-size:26px;margin:0 0 4px}
+  #about .sub{color:var(--paper-dim);font-size:13px;margin:0 0 18px}
+  #about h4{font-family:'Archivo';font-size:12px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--amber);margin:20px 0 6px}
+  #about p,#about li{font-size:13.5px;line-height:1.6;color:#cdbf9f;margin:0 0 8px}
+  #about a{color:var(--amber)}
+  #about .close{position:absolute;top:18px;right:20px;background:none;border:none;
+    color:var(--paper-dim);font-size:26px;cursor:pointer}
+  .aicaution{margin-top:20px;border:1px solid #6b2323;background:rgba(74,20,20,.35);
+    border-radius:8px;padding:12px 14px;font-size:12.5px;color:#e7c9c9}
+  .aicaution b{color:#f0a3a3}
+
+  @media (max-width:720px){
+    #mast{max-width:100vw;padding:14px 16px 22px}
+    #mast p{display:none}
+    #boros{top:auto;bottom:186px;right:10px}
+    .boro{min-width:auto;padding:5px 8px;font-size:11px}
+    .boro .nm{display:none}
+    #readout{bottom:176px;left:16px}
+    #year{font-size:clamp(48px,16vw,72px)}
+    #detail{bottom:auto;top:64px;left:50%;transform:translateX(-50%);width:92vw}
+    #legend{padding-left:0;justify-content:center}
+    #speedwrap{display:none}
+  }
+</style>
+</head>
+<body>
+<div id="map"></div>
+
+<header id="mast">
+  <p class="kicker">Sixty years of preservation</p>
+  <h1>The landmarking of New York</h1>
+  <p>Every historic district the city has declared since the Landmarks Law of 1965 — 141 of them, from Brooklyn Heights to last winter. Press play to watch the map fill in.</p>
+  <div class="btns">
+    <button class="ghost" id="aboutBtn">About &amp; sources</button>
+    <button class="ghost" id="resetBtn">Restart</button>
+  </div>
+</header>
+
+<div id="boros"></div>
+
+<div id="readout">
+  <div id="year">1965</div>
+  <div id="tally"><b id="count">0</b> of 141 districts declared</div>
+  <div id="latest"></div>
+</div>
+
+<aside id="detail">
+  <button class="close" id="detailClose">×</button>
+  <div class="dboro" id="dBoro"></div>
+  <h3 id="dName"></h3>
+  <div class="dmeta" id="dMeta"></div>
+  <div id="dExt"></div>
+  <a class="report" id="dReport" target="_blank" rel="noopener">Read the designation report&nbsp;↗</a>
+</aside>
+
+<div id="dock">
+  <div id="controls">
+    <button id="play" title="Play / pause">▶</button>
+    <div id="tl-wrap"><svg id="tl"></svg></div>
+    <div id="speedwrap">
+      <span>Speed</span>
+      <input id="speed" type="range" min="0.4" max="3" step="0.1" value="1">
+    </div>
+    <button id="showall">Show all</button>
+  </div>
+  <div id="legend">
+    <span class="lbl">Declared</span>
+    <span class="sw"><span class="chip" style="background:#c1440e"></span>1965–69</span>
+    <span class="sw"><span class="chip" style="background:#e05a17"></span>70s</span>
+    <span class="sw"><span class="chip" style="background:#ef7d1a"></span>80s</span>
+    <span class="sw"><span class="chip" style="background:#f59e1f"></span>90s</span>
+    <span class="sw"><span class="chip" style="background:#f6bb3a"></span>2000s</span>
+    <span class="sw"><span class="chip" style="background:#f2d661"></span>2010s</span>
+    <span class="sw"><span class="chip" style="background:#fbefb0"></span>2020s</span>
+  </div>
+</div>
+
+<div id="about">
+  <div class="card">
+    <button class="close" id="aboutClose">×</button>
+    <h2>The landmarking of New York</h2>
+    <p class="sub">An animated map of the city's 141 historic districts and when each was declared.</p>
+
+    <h4>What this shows</h4>
+    <p>Each shape is a New York City <b>historic district</b> — an area the Landmarks Preservation Commission has designated so that changes to its buildings are regulated. Districts light up on the map in the order they were declared, colored by the decade of designation. This map counts only <b>designated, currently active</b> districts, not individual landmarks, scenic landmarks, interior landmarks, or areas that were merely proposed.</p>
+
+    <h4>The count</h4>
+    <p>141 districts, declared between Nov. 23, 1965 (Brooklyn Heights, the first, months after the Landmarks Law took effect) and Nov. 25, 2025. Thirteen of the 141 are <b>extensions</b> of an earlier district and carry their own later designation date; each is mapped and dated on its own. Manhattan has 70, Brooklyn 42, Queens and The Bronx 13 each, Staten Island 3.</p>
+
+    <h4>Sources</h4>
+    <p>Boundaries, designation dates and district names come from the Landmarks Preservation Commission's <a href="https://data.cityofnewyork.us/Housing-Development/Historic-Districts-Map-/xbvj-gfnw" target="_blank" rel="noopener">Historic Districts</a> dataset on NYC Open Data (dataset <code>skyk-mpzq</code>), filtered to records where status is "designated" and the boundary is current. The "read the designation report" links open the commission's official PDF for each district at s-media.nyc.gov. Base map tiles: OpenStreetMap contributors and CARTO.</p>
+
+    <h4>Notes &amp; caveats</h4>
+    <p>The designation date shown is the day the commission voted to designate. Boundary polygons are derived by the LPC primarily from Department of City Planning tax-lot data and are simplified slightly here for the web. A handful of designations have complicated histories (overturned, re-designated or amended); this map reflects the boundary the LPC currently marks as active. Coordinates rounded to five decimal places.</p>
+
+    <div class="aicaution"><b>A note on AI:</b> This map was built with the help of AI. The underlying data is straight from the city's Landmarks Preservation Commission, but the processing and code have not been exhaustively hand-audited. Check any figure against the source dataset before relying on it.</div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const ERA_COLORS={'1965–1969':'#c1440e','1970s':'#e05a17','1980s':'#ef7d1a','1990s':'#f59e1f','2000s':'#f6bb3a','2010s':'#f2d661','2020s':'#fbefb0'};
+const BORO_COLORS={'Manhattan':'#f2b134','Brooklyn':'#e8701f','Queens':'#f2d661','The Bronx':'#c1440e','Staten Island':'#f6bb3a'};
+const BOROS=['Manhattan','Brooklyn','Queens','The Bronx','Staten Island'];
+const START=1965, END=2026; // exclusive-ish upper bound for the scrub range
+
+const MONTHS=['Jan.','Feb.','March','April','May','June','July','Aug.','Sept.','Oct.','Nov.','Dec.'];
+function apDate(iso){const [y,m,d]=iso.split('-').map(Number);return `${MONTHS[m-1]} ${d}, ${y}`;}
+function reportURL(lp){if(!lp)return null;const n=parseInt(String(lp).replace(/[^0-9]/g,''),10);if(!n)return null;return `https://s-media.nyc.gov/agencies/lpc/lp/${String(n).padStart(4,'0')}.pdf`;}
+function toNum(iso){const [y,m,d]=iso.split('-').map(Number);return y+(m-1)/12+(d-1)/365;} // fractional year
+
+const map=L.map('map',{zoomControl:true,attributionControl:true,minZoom:10,maxZoom:17,
+  zoomSnap:.25,preferCanvas:false}).setView([40.718,-73.98],11.4);
+L.control.zoom({position:'topright'});
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+  attribution:'&copy; OpenStreetMap contributors &copy; CARTO · Data: NYC Landmarks Preservation Commission',
+  subdomains:'abcd',maxZoom:19,className:'warm-tiles'}).addTo(map);
+
+let FEATS=[], geoLayer=null, layersByIdx=[];
+let cursor=toNum('1965-01-01'); // fractional-year playhead
+let playing=false, showAll=false, pinned=null, hovered=null;
+const boroOff=new Set();
+const flash=new Map(); // idx -> expiry ms
+let lastShownCount=0;
+
+const $=id=>document.getElementById(id);
+
+fetch('districts.json').then(r=>r.json()).then(gj=>{
+  FEATS=gj.features;
+  FEATS.forEach((f,i)=>{f.properties._i=i;f.properties._n=toNum(f.properties.date);});
+  buildBoros();
+  buildTimeline();
+  geoLayer=L.geoJSON(gj,{style:styleFor,onEachFeature:(feat,layer)=>{
+    layersByIdx[feat.properties._i]=layer;
+    layer.on('mouseover',()=>{hovered=feat.properties._i;restyleOne(feat.properties._i);});
+    layer.on('mouseout',()=>{if(hovered===feat.properties._i)hovered=null;restyleOne(feat.properties._i);});
+    layer.on('click',e=>{L.DomEvent.stop(e);openDetail(feat.properties._i);});
+  }}).addTo(map);
+  map.on('click',closeDetail);
+  updateAll();
+  loop();
+  // robustness: full-screen Leaflet maps can init before layout settles or while backgrounded
+  const fix=()=>{map.invalidateSize(false);restyleAll();};
+  setTimeout(fix,200); window.addEventListener('load',fix);
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')fix();});
+});
+
+function isShown(p){return showAll || p._n<=cursor;}
+function styleFor(feat){
+  const p=feat.properties, i=p._i;
+  const off=boroOff.has(p.boro);
+  const shown=isShown(p)&&!off;
+  if(!shown) return {opacity:0,fillOpacity:0,weight:0,interactive:false};
+  const flashing=flash.has(i);
+  const hov=hovered===i, pin=pinned===i;
+  const base=ERA_COLORS[p.era]||'#f2b134';
+  return {
+    color: flashing||hov||pin ? '#fff8e6' : base,
+    weight: flashing?3 : (hov||pin)?2.4 : 1,
+    opacity: flashing?1 : .9,
+    fillColor: base,
+    fillOpacity: flashing?.85 : (hov||pin)?.72 : .5,
+  };
+}
+function restyleOne(i){const l=layersByIdx[i];if(l)l.setStyle(styleFor(l.feature));}
+function restyleAll(){if(!geoLayer)return;geoLayer.eachLayer(l=>l.setStyle(styleFor(l.feature)));}
+
+/* ---------- counters ---------- */
+function updateCounters(){
+  const boroCt={}; BOROS.forEach(b=>boroCt[b]=0); let total=0; let latestName='';
+  for(const f of FEATS){const p=f.properties; if(isShown(p)&&!boroOff.has(p.boro)){total++;boroCt[p.boro]++;}}
+  // latest = last declared at/under cursor (regardless of boro filter, for the ticker)
+  let latest=null;
+  for(const f of FEATS){const p=f.properties; if(p._n<=cursor||showAll){if(!latest||p._n>latest._n)latest=p;}}
+  $('count').textContent=total;
+  $('year').textContent=showAll?'All':Math.min(END-1,Math.floor(cursor));
+  if(latest){const yr=latest.date.slice(0,4);$('latest').textContent=`Latest: ${latest.name} · ${yr}`;}
+  else $('latest').textContent='';
+  BOROS.forEach(b=>{const el=document.querySelector(`.boro[data-b="${b}"] .ct`); if(el)el.textContent=boroCt[b];});
+}
+function updateAll(){restyleAll();updateCounters();drawPlayhead();}
+
+/* ---------- borough chips ---------- */
+function buildBoros(){
+  const wrap=$('boros'); const counts={};BOROS.forEach(b=>counts[b]=0);
+  FEATS.forEach(f=>counts[f.properties.boro]++);
+  wrap.innerHTML='';
+  BOROS.forEach(b=>{
+    const el=document.createElement('div');el.className='boro';el.dataset.b=b;
+    el.innerHTML=`<span class="ct">0</span><span class="nm">${b}</span><span class="dot" style="background:${BORO_COLORS[b]}"></span>`;
+    el.title=`Toggle ${b} (${counts[b]} districts)`;
+    el.onclick=()=>{if(boroOff.has(b)){boroOff.delete(b);el.classList.remove('off');}else{boroOff.add(b);el.classList.add('off');}updateAll();};
+    wrap.appendChild(el);
+  });
+}
+
+/* ---------- timeline (SVG bar chart + playhead) ---------- */
+const TL=$('tl'); let tlW=0, tlH=62, PAD=6;
+function yearX(y){return PAD+(y-START)/(END-START)*(tlW-2*PAD);}
+function xToYear(x){return START+(x-PAD)/(tlW-2*PAD)*(END-START);}
+let playhead=null;
+function buildTimeline(){
+  const rect=TL.getBoundingClientRect(); tlW=rect.width||TL.clientWidth||600; tlH=62;
+  TL.setAttribute('viewBox',`0 0 ${tlW} ${tlH}`); TL.innerHTML='';
+  const counts={}; let mx=0;
+  FEATS.forEach(f=>{const y=f.properties.year;counts[y]=(counts[y]||0)+1;mx=Math.max(mx,counts[y]);});
+  const NS='http://www.w3.org/2000/svg';
+  const baseY=tlH-14, maxBarH=tlH-24;
+  const bw=Math.max(2,(tlW-2*PAD)/(END-START)-1.5);
+  function eraFor(y){if(y<=1969)return ERA_COLORS['1965–1969'];if(y<1980)return ERA_COLORS['1970s'];if(y<1990)return ERA_COLORS['1980s'];if(y<2000)return ERA_COLORS['1990s'];if(y<2010)return ERA_COLORS['2000s'];if(y<2020)return ERA_COLORS['2010s'];return ERA_COLORS['2020s'];}
+  for(let y=START;y<END;y++){
+    const c=counts[y]||0; const h=c?Math.max(2.5,c/mx*maxBarH):0;
+    const r=document.createElementNS(NS,'rect');
+    r.setAttribute('x',yearX(y).toFixed(1));r.setAttribute('y',(baseY-h).toFixed(1));
+    r.setAttribute('width',bw.toFixed(1));r.setAttribute('height',h.toFixed(1));
+    r.setAttribute('rx','1');r.setAttribute('fill',eraFor(y));r.setAttribute('opacity','.9');
+    r.setAttribute('data-y',y); r.classList.add('bar');
+    TL.appendChild(r);
+  }
+  // baseline
+  const bl=document.createElementNS(NS,'line');
+  bl.setAttribute('x1',PAD);bl.setAttribute('x2',tlW-PAD);bl.setAttribute('y1',baseY+.5);bl.setAttribute('y2',baseY+.5);
+  bl.setAttribute('stroke','rgba(233,206,158,.22)');bl.setAttribute('stroke-width','1');TL.appendChild(bl);
+  // decade labels
+  [1965,1975,1985,1995,2005,2015,2025].forEach(y=>{
+    const t=document.createElementNS(NS,'text');
+    t.setAttribute('x',yearX(y));t.setAttribute('y',tlH-2);t.setAttribute('fill','#8a7d63');
+    t.setAttribute('font-size','9');t.setAttribute('font-family','Archivo,sans-serif');
+    t.setAttribute('text-anchor', y===1965?'start':y===2025?'end':'middle');
+    t.textContent=`’${String(y).slice(2)}`;TL.appendChild(t);
+  });
+  // playhead
+  playhead=document.createElementNS(NS,'g');
+  const ln=document.createElementNS(NS,'line');ln.setAttribute('y1',2);ln.setAttribute('y2',baseY+3);
+  ln.setAttribute('stroke','#fff8e6');ln.setAttribute('stroke-width','1.5');ln.classList.add('ph-l');
+  const hd=document.createElementNS(NS,'circle');hd.setAttribute('cy',2);hd.setAttribute('r',3.5);
+  hd.setAttribute('fill','#fff8e6');hd.classList.add('ph-h');
+  playhead.appendChild(ln);playhead.appendChild(hd);TL.appendChild(playhead);
+  drawPlayhead();
+  // interaction
+  let drag=false;
+  const setFromEvt=e=>{const rct=TL.getBoundingClientRect();const cx=((e.touches?e.touches[0].clientX:e.clientX)-rct.left)/rct.width*tlW;
+    let y=xToYear(cx);y=Math.max(START,Math.min(END-0.001,y));showAll=false;$('showall').classList.remove('active');cursor=y;pauseIfEnd();updateAll();};
+  TL.addEventListener('mousedown',e=>{drag=true;stop();setFromEvt(e);});
+  window.addEventListener('mousemove',e=>{if(drag)setFromEvt(e);});
+  window.addEventListener('mouseup',()=>drag=false);
+  TL.addEventListener('touchstart',e=>{drag=true;stop();setFromEvt(e);e.preventDefault();},{passive:false});
+  TL.addEventListener('touchmove',e=>{if(drag){setFromEvt(e);e.preventDefault();}},{passive:false});
+  TL.addEventListener('touchend',()=>drag=false);
+}
+function drawPlayhead(){if(!playhead)return;const x=showAll?yearX(END-0.001):yearX(cursor);
+  playhead.querySelector('.ph-l').setAttribute('x1',x);playhead.querySelector('.ph-l').setAttribute('x2',x);
+  playhead.querySelector('.ph-h').setAttribute('cx',x);
+  playhead.style.opacity=showAll?0:1;}
+
+/* ---------- detail ---------- */
+function openDetail(i){pinned=i;const p=FEATS[i].properties;
+  $('dBoro').textContent=p.boro;$('dBoro').style.color=BORO_COLORS[p.boro]||'#f2b134';
+  $('dName').textContent=p.name;
+  $('dMeta').innerHTML=`Declared <b>${apDate(p.date)}</b><br>Designation number <b>${p.lp||'—'}</b>`;
+  $('dExt').innerHTML=p.ext?'<span class="ext">Extension of an earlier district</span>':'';
+  const u=reportURL(p.lp);const a=$('dReport');
+  if(u){a.href=u;a.style.display='inline-block';}else{a.style.display='none';}
+  $('detail').classList.add('on');restyleAll();}
+function closeDetail(){if(pinned!==null){pinned=null;$('detail').classList.remove('on');restyleAll();}}
+$('detailClose').onclick=closeDetail;
+
+/* ---------- playback ---------- */
+const YEARS_PER_SEC_BASE=2.6; let last=performance.now();
+function loop(){
+  const now=performance.now();const dt=(now-last)/1000;last=now;
+  // expire flashes
+  if(flash.size){for(const [i,exp] of flash){if(now>exp){flash.delete(i);restyleOne(i);}}}
+  if(playing&&!showAll){
+    const sp=parseFloat($('speed').value)||1;
+    cursor+=dt*YEARS_PER_SEC_BASE*sp;
+    // detect newly shown for flash
+    let shownNow=0; for(const f of FEATS){if(f.properties._n<=cursor)shownNow++;}
+    if(shownNow>lastShownCount){
+      // features with _n<=cursor sorted; flash the ones between lastShownCount and shownNow
+      const newlyLit=FEATS.filter(f=>f.properties._n<=cursor).sort((a,b)=>a.properties._n-b.properties._n).slice(lastShownCount,shownNow);
+      newlyLit.forEach(f=>{flash.set(f.properties._i,now+750);});
+      lastShownCount=shownNow;
+    }
+    if(cursor>=END-0.001){cursor=END-0.001;pause();}
+    updateAll();
+  }
+  requestAnimationFrame(loop);
+}
+function syncShownCount(){lastShownCount=0;for(const f of FEATS){if(f.properties._n<=cursor)lastShownCount++;}}
+function play(){if(showAll){showAll=false;$('showall').classList.remove('active');}
+  if(cursor>=END-0.001){cursor=toNum('1965-01-01');flash.clear();}
+  syncShownCount();playing=true;$('play').textContent='❚❚';last=performance.now();}
+function pause(){playing=false;$('play').textContent='▶';}
+function stop(){pause();}
+function pauseIfEnd(){syncShownCount();}
+$('play').onclick=()=>{playing?pause():play();};
+$('showall').onclick=()=>{showAll=!showAll;pause();$('showall').classList.toggle('active',showAll);
+  if(showAll)flash.clear();updateAll();};
+$('resetBtn').onclick=()=>{showAll=false;$('showall').classList.remove('active');pause();cursor=toNum('1965-01-01');flash.clear();syncShownCount();updateAll();};
+$('speed').oninput=()=>{};
+
+/* about modal */
+$('aboutBtn').onclick=()=>$('about').classList.add('on');
+$('aboutClose').onclick=()=>$('about').classList.remove('on');
+$('about').addEventListener('click',e=>{if(e.target.id==='about')$('about').classList.remove('on');});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('about').classList.remove('on');closeDetail();}
+  if(e.key===' '&&e.target.tagName!=='INPUT'){e.preventDefault();playing?pause():play();}});
+
+/* responsive timeline redraw */
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{buildTimeline();},200);});
+</script>
+</body>
+</html>
