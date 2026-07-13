@@ -281,16 +281,16 @@ fetch('districts.json').then(r=>r.json()).then(gj=>{
   FEATS.forEach((f,i)=>{f.properties._i=i;f.properties._n=toNum(f.properties.date);});
   buildBoros();
   buildTimeline();
-  geoLayer=L.geoJSON(gj,{style:styleFor,onEachFeature:(feat,layer)=>{
+  geoLayer=L.geoJSON(gj,{interactive:true,style:styleFor,onEachFeature:(feat,layer)=>{
     const i=feat.properties._i, p=feat.properties;
     layersByIdx[i]=layer;
     layer.bindPopup(popupHTML(p),{className:'hd-pop',maxWidth:250,minWidth:190,
       autoPan:false,closeButton:true,offset:[0,-2]});
-    // hover to open (with intent delay so links stay reachable); tap opens on touch
-    layer.on('mouseover',e=>{if(hideTimer){clearTimeout(hideTimer);hideTimer=null;}
+    // hover to open (with intent delay so the links stay reachable); tap opens on touch
+    layer.on('mouseover',e=>{if(!shownFor(p))return;
+      if(hideTimer){clearTimeout(hideTimer);hideTimer=null;}
       hovered=i;restyleOne(i);
       if(pinned===null && !layer.isPopupOpen()) layer.openPopup(e.latlng);});
-    layer.on('mousemove',e=>{if(pinned===null && layer.isPopupOpen()) layer.getPopup().setLatLng(e.latlng);});
     layer.on('mouseout',()=>{const h=hovered;hovered=null;if(h!=null)restyleOne(h);
       if(pinned!==i) scheduleClose(layer);});
     layer.on('click',e=>{L.DomEvent.stop(e);pinned=i;hovered=i;restyleOne(i);
@@ -310,11 +310,11 @@ fetch('districts.json').then(r=>r.json()).then(gj=>{
 });
 
 function isShown(p){return showAll || p._n<=cursor;}
+function shownFor(p){return isShown(p) && !boroOff.has(p.boro);}
 function styleFor(feat){
   const p=feat.properties, i=p._i;
-  const off=boroOff.has(p.boro);
-  const shown=isShown(p)&&!off;
-  if(!shown) return {opacity:0,fillOpacity:0,weight:0,interactive:false};
+  const shown=shownFor(p);
+  if(!shown) return {opacity:0,fillOpacity:0,weight:0};
   const flashing=flash.has(i);
   const hov=hovered===i, pin=pinned===i;
   const base=ERA_COLORS[p.era]||'#f2b134';
@@ -326,8 +326,14 @@ function styleFor(feat){
     fillOpacity: flashing?.85 : (hov||pin)?.72 : .5,
   };
 }
-function restyleOne(i){const l=layersByIdx[i];if(l)l.setStyle(styleFor(l.feature));}
-function restyleAll(){if(!geoLayer)return;geoLayer.eachLayer(l=>l.setStyle(styleFor(l.feature)));}
+// NOTE: never toggle Leaflet's `interactive` via setStyle — it can't turn it back on.
+// Keep every path interactive and gate hover eligibility with pointer-events on the SVG node.
+function applyStyle(l){
+  l.setStyle(styleFor(l.feature));
+  if(l._path) l._path.style.pointerEvents = shownFor(l.feature.properties) ? 'auto' : 'none';
+}
+function restyleOne(i){const l=layersByIdx[i];if(l)applyStyle(l);}
+function restyleAll(){if(!geoLayer)return;geoLayer.eachLayer(applyStyle);}
 
 /* ---------- counters ---------- */
 function updateCounters(){
