@@ -44,6 +44,15 @@ Output: `districts.json`, a single WGS84 GeoJSON FeatureCollection (159 features
 - This is the **sum** of the 159 individual district areas. A few older districts sit partly inside larger ones — Carnegie Hill within the Expanded Carnegie Hill district, and two small Central Park West blocks within the Upper West Side/Central Park West district — so **about 16 acres (0.36%) are counted in two districts.** The **unique protected land** (all shapes dissolved together) is **≈ 4,557 acres**. The running counter shows the summed figure, since each district "adds" its own acreage as it appears.
 - Overlap was measured directly with a polygon union (`shapely`); only those three pairs overlap by more than half an acre.
 
+## Share of each borough landmarked
+
+The borough chips show the percentage of each borough's **land** that sits inside a historic district.
+
+- **Numerator** — the landmarked *footprint* per borough, using each district's **net new area** (`net` in `districts.json`): built chronologically, each district counts only ground not already covered by an earlier district, so the three overlapping Manhattan pairs aren't double-counted. Summed over the districts shown at any point in the animation, it equals the union footprint at that moment — which is why the percentage climbs correctly as districts appear.
+- **Denominator** — each borough's **land** area (excluding water), 2020 Census figures (sq mi × 640 acres): Manhattan 22.7, Brooklyn 69.4, Queens 108.7, The Bronx 42.2, Staten Island 57.5.
+- **Result (full extent):** Manhattan **12.4%**, Brooklyn **3.2%**, Staten Island **1.1%**, Queens **1.0%**, The Bronx **1.0%**; **citywide 2.4%**.
+- **Robustness:** borough land areas vary slightly by source (Census vintage). Recomputing with the alternate 2020 Census county figures moves every percentage by ≤ 0.1 point — all round identically — so the result is not sensitive to that choice. Confidence: high.
+
 ## Notes and caveats
 
 - The **designation date** shown is the day the commission voted to designate each area.

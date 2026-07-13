@@ -70,12 +70,16 @@
   .boro{display:flex;align-items:center;gap:8px;justify-content:flex-end;
     background:var(--panel);border:1px solid var(--line);border-radius:8px;
     padding:6px 10px;font-size:12px;cursor:pointer;backdrop-filter:blur(6px);
-    transition:opacity .15s;min-width:132px}
+    transition:opacity .15s;min-width:164px}
   .boro:hover{background:#211c15}
   .boro.off{opacity:.34}
   .boro .nm{color:var(--paper-dim);flex:1;text-align:left;font-weight:500}
-  .boro .ct{color:var(--paper);font-weight:700;font-variant-numeric:tabular-nums}
+  .boro .ct{color:var(--paper);font-weight:700;font-variant-numeric:tabular-nums;min-width:20px;text-align:right}
+  .boro .pct{color:var(--amber);font-weight:600;font-variant-numeric:tabular-nums;
+    font-size:11px;min-width:38px;text-align:right}
   .boro .dot{width:9px;height:9px;border-radius:50%}
+  #boros .caption{font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;
+    color:#8a7d63;text-align:right;padding:0 2px;margin-top:1px;font-weight:600}
 
   /* ---- Timeline dock ---- */
   #dock{position:absolute;left:0;right:0;bottom:0;z-index:600;
@@ -237,6 +241,9 @@
     <h4>Acres landmarked</h4>
     <p>The running acreage is the summed land area of every district shown, computed as the true <b>geodesic area</b> of each boundary polygon on the WGS84 ellipsoid. All 159 districts together cover <b>≈ 4,574 acres, about 7.1 square miles</b> — roughly eight times the size of Central Park. A handful of older districts sit partly inside larger ones (e.g. Carnegie Hill within the Expanded Carnegie Hill district), so about 16 acres are counted in two districts; the unique protected land is closer to <b>4,557 acres</b>.</p>
 
+    <h4>Share of each borough landmarked</h4>
+    <p>The <b>% on each borough chip</b> is the share of that borough's <b>land</b> that sits inside a historic district — the district footprint (counting overlapping districts only once) over the borough's land area (2020 Census). At full extent: <b>Manhattan 12.4%</b> (about one acre in eight), <b>Brooklyn 3.2%</b>, <b>Staten Island 1.1%</b>, <b>Queens 1.0%</b>, <b>The Bronx 1.0%</b> — and <b>2.4%</b> citywide. The figure climbs as districts appear.</p>
+
     <h4>Sources</h4>
     <p>Boundaries, designation dates, district names and the official report links come straight from the LPC's <b>own live ArcGIS layer</b> (<code>Historic_Districts_LPC</code>) — the data behind the commission's official <a href="https://www.landmarks.nyc/" target="_blank" rel="noopener">Discover NYC Landmarks</a> map, reached from the LPC <a href="https://www.nyc.gov/site/lpc/designations/maps.page" target="_blank" rel="noopener">maps page</a>. "Designation report" links open the commission's official PDF for each district; "Wikipedia" links run a title search. Base map tiles: OpenStreetMap contributors and CARTO.</p>
 
@@ -252,6 +259,8 @@
 const ERA_COLORS={'1965–1969':'#c1440e','1970s':'#e05a17','1980s':'#ef7d1a','1990s':'#f59e1f','2000s':'#f6bb3a','2010s':'#f2d661','2020s':'#fbefb0'};
 const BORO_COLORS={'Manhattan':'#f2b134','Brooklyn':'#e8701f','Queens':'#f2d661','The Bronx':'#c1440e','Staten Island':'#f6bb3a'};
 const BOROS=['Manhattan','Brooklyn','Queens','The Bronx','Staten Island'];
+// borough LAND area in acres (2020 Census land area, sq mi × 640), for the "% landmarked" readout
+const BORO_LAND_AC={'Manhattan':22.7*640,'Brooklyn':69.4*640,'Queens':108.7*640,'The Bronx':42.2*640,'Staten Island':57.5*640};
 const START=1965, END=2026; // exclusive-ish upper bound for the scrub range
 
 const MONTHS=['Jan.','Feb.','March','April','May','June','July','Aug.','Sept.','Oct.','Nov.','Dec.'];
@@ -337,8 +346,8 @@ function restyleAll(){if(!geoLayer)return;geoLayer.eachLayer(applyStyle);}
 
 /* ---------- counters ---------- */
 function updateCounters(){
-  const boroCt={}; BOROS.forEach(b=>boroCt[b]=0); let total=0, ac=0;
-  for(const f of FEATS){const p=f.properties; if(isShown(p)&&!boroOff.has(p.boro)){total++;ac+=p.acres;boroCt[p.boro]++;}}
+  const boroCt={}, boroAc={}; BOROS.forEach(b=>{boroCt[b]=0;boroAc[b]=0;}); let total=0, ac=0;
+  for(const f of FEATS){const p=f.properties; if(isShown(p)&&!boroOff.has(p.boro)){total++;ac+=p.acres;boroCt[p.boro]++;boroAc[p.boro]+=p.net;}}
   // latest = last declared at/under cursor (regardless of boro filter, for the ticker)
   let latest=null;
   for(const f of FEATS){const p=f.properties; if(p._n<=cursor||showAll){if(!latest||p._n>latest._n)latest=p;}}
@@ -348,7 +357,13 @@ function updateCounters(){
   $('year').textContent=showAll?'All':Math.min(END-1,Math.floor(cursor));
   if(latest){const yr=latest.date.slice(0,4);$('latest').textContent=`Latest: ${latest.name} · ${yr}`;}
   else $('latest').textContent='';
-  BOROS.forEach(b=>{const el=document.querySelector(`.boro[data-b="${b}"] .ct`); if(el)el.textContent=boroCt[b];});
+  BOROS.forEach(b=>{
+    const row=document.querySelector(`.boro[data-b="${b}"]`); if(!row)return;
+    row.querySelector('.ct').textContent=boroCt[b];
+    const pct=boroAc[b]/BORO_LAND_AC[b]*100;
+    row.querySelector('.pct').textContent=pct.toFixed(1)+'%';
+    row.title=`${b}: ${boroCt[b]} districts · ${(boroAc[b]/BORO_LAND_AC[b]*100).toFixed(1)}% of the borough's land is landmarked`;
+  });
 }
 function updateAll(){restyleAll();updateCounters();drawPlayhead();}
 
@@ -359,11 +374,13 @@ function buildBoros(){
   wrap.innerHTML='';
   BOROS.forEach(b=>{
     const el=document.createElement('div');el.className='boro';el.dataset.b=b;
-    el.innerHTML=`<span class="ct">0</span><span class="nm">${b}</span><span class="dot" style="background:${BORO_COLORS[b]}"></span>`;
+    el.innerHTML=`<span class="ct">0</span><span class="nm">${b}</span><span class="pct">0%</span><span class="dot" style="background:${BORO_COLORS[b]}"></span>`;
     el.title=`Toggle ${b} (${counts[b]} districts)`;
     el.onclick=()=>{if(boroOff.has(b)){boroOff.delete(b);el.classList.remove('off');}else{boroOff.add(b);el.classList.add('off');}updateAll();};
     wrap.appendChild(el);
   });
+  const cap=document.createElement('div');cap.className='caption';
+  cap.textContent='districts · % of land';wrap.appendChild(cap);
 }
 
 /* ---------- timeline (SVG bar chart + playhead) ---------- */

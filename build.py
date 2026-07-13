@@ -113,11 +113,32 @@ def main():
         })
 
     feats.sort(key=lambda f: (f["properties"]["date"], f["properties"]["name"]))
+
+    # net = each district's NEW footprint (its area minus any ground already covered by an
+    # earlier-designated district). Summed chronologically it equals the union footprint, so a
+    # running total / per-borough % never double-counts the few overlapping districts. Needs shapely.
+    from shapely.geometry import shape
+    from shapely.ops import unary_union
+    def gac(geom):
+        a, _ = g.geometry_area_perimeter(geom)
+        return abs(a) / ACRE_M2
+    acc = None
+    for f in feats:
+        gm = shape(f["geometry"]).buffer(0)
+        if acc is None:
+            net = gac(gm); acc = gm
+        else:
+            inter = gm.intersection(acc)
+            net = gac(gm) - (gac(inter) if not inter.is_empty else 0.0)
+            acc = unary_union([acc, gm])
+        f["properties"]["net"] = round(max(net, 0.0), 2)
+
     json.dump({"type": "FeatureCollection", "features": feats},
               open(OUT, "w"), separators=(",", ":"))
     tot = sum(f["properties"]["acres"] for f in feats)
+    net_tot = sum(f["properties"]["net"] for f in feats)
     print(f"Wrote {len(feats)} districts -> {OUT} ({os.path.getsize(OUT)//1024} KB)")
-    print(f"Total: {tot:,.0f} acres ({tot/640:.2f} sq mi)")
+    print(f"Total: {tot:,.0f} acres sum · {net_tot:,.0f} acres unique ({net_tot/640:.2f} sq mi)")
 
 if __name__ == "__main__":
     main()
