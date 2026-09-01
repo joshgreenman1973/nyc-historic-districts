@@ -272,7 +272,7 @@ function toNum(iso){const [y,m,d]=iso.split('-').map(Number);return y+(m-1)/12+(
 const map=L.map('map',{zoomControl:false,attributionControl:true,minZoom:10,maxZoom:17,
   zoomSnap:.25,scrollWheelZoom:true,preferCanvas:false}).setView([40.718,-73.98],11.4);
 L.control.zoom({position:'bottomright'}).addTo(map);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=cb1_2r82_1_ae4e70b6166057bc41b89638',{
   attribution:'&copy; OpenStreetMap contributors &copy; CARTO · Data: NYC Landmarks Preservation Commission',
   subdomains:'abcd',maxZoom:19,className:'warm-tiles'}).addTo(map);
 
