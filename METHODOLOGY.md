@@ -6,7 +6,7 @@ An animated map of every New York City historic district and the year it was dec
 
 Each shape is a **historic district** designated by the New York City Landmarks Preservation Commission (LPC). Districts appear on the map in the order they were declared, colored by the decade of designation, and a **running acreage total** climbs as each one lights up. Press play to watch the map fill in from 1965 forward; scrub the timeline or hit "Show all" to see the whole picture at once. **Hover** a district for its name, year and size; **click** it to pin the panel and open its official LPC designation report and Wikipedia page.
 
-This map covers **only designated, currently active historic districts and extensions** — not individual landmarks, scenic landmarks, interior landmarks, or areas that were merely proposed, calendared, denied or overturned.
+This map covers **only designated, currently active historic districts and extensions** — not individual landmarks, scenic landmarks, interior landmarks or areas that were merely proposed, calendared, denied or overturned.
 
 ## The count
 
