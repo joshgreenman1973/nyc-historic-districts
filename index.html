@@ -239,7 +239,7 @@
     <p><b>25</b> of the 159 are <b>extensions</b> of an earlier district, each carrying its own, later designation date and drawn as its own shape — so a district and its extensions light up in different years. (An earlier version of this map used NYC Open Data's consolidated export, which shows only 141 shapes because it omits about 18 extensions; this version uses the LPC's live mapping layer, which breaks every one out.)</p>
 
     <h4>Acres landmarked</h4>
-    <p>The running acreage is the summed land area of every district shown, computed as the true <b>geodesic area</b> of each boundary polygon on the WGS84 ellipsoid. All 159 districts together cover <b>≈ 4,574 acres, about 7.1 square miles</b> — roughly eight times the size of Central Park. A handful of older districts sit partly inside larger ones (e.g. Carnegie Hill within the Expanded Carnegie Hill district), so about 16 acres are counted in two districts; the unique protected land is closer to <b>4,557 acres</b>.</p>
+    <p>The running acreage is the summed land area of every district shown, computed as the true <b>geodesic area</b> of each boundary polygon on the WGS84 ellipsoid. All 159 districts together cover <b>≈ 4,574 acres, about 7.1 square miles</b> — more than five times the size of Central Park (843 acres). A handful of older districts sit partly inside larger ones (e.g. Carnegie Hill within the Expanded Carnegie Hill district), so about 16 acres are counted in two districts; the unique protected land is closer to <b>4,557 acres</b>.</p>
 
     <h4>Share of each borough landmarked</h4>
     <p>The <b>% on each borough chip</b> is the share of that borough's <b>land</b> that sits inside a historic district — the district footprint (counting overlapping districts only once) over the borough's land area (2020 Census). At full extent: <b>Manhattan 12.4%</b> (about one acre in eight), <b>Brooklyn 3.2%</b>, <b>Staten Island 1.1%</b>, <b>Queens 1.0%</b>, <b>The Bronx 1.0%</b> — and <b>2.4%</b> citywide. The figure climbs as districts appear.</p>
@@ -453,7 +453,7 @@ function popupHTML(p){
     `<div class="p-meta">Designated <b>${apDate(p.date)}</b><br>${fmtAcres(p.acres)} acres · ${p.lp||''}</div>`+
     `<div class="p-links">`+
       (rpt?`<a href="${rpt}" target="_blank" rel="noopener">Designation report ↗</a>`:``)+
-      `<a href="${wiki}" target="_blank" rel="noopener">More info ↗</a>`+
+      `<a href="${wiki}" target="_blank" rel="noopener">Wikipedia ↗</a>`+
     `</div></div>`;
 }
 function scheduleClose(layer){if(hideTimer)clearTimeout(hideTimer);

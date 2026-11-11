@@ -40,7 +40,7 @@ Output: `districts.json`, a single WGS84 GeoJSON FeatureCollection (159 features
 
 ## Acres landmarked
 
-- All 159 districts together cover **≈ 4,574 acres, about 7.1 square miles** (roughly eight Central Parks).
+- All 159 districts together cover **≈ 4,574 acres, about 7.1 square miles** (more than five Central Parks, at 843 acres each).
 - This is the **sum** of the 159 individual district areas. A few older districts sit partly inside larger ones — Carnegie Hill within the Expanded Carnegie Hill district, and two small Central Park West blocks within the Upper West Side/Central Park West district — so **about 16 acres (0.36%) are counted in two districts.** The **unique protected land** (all shapes dissolved together) is **≈ 4,557 acres**. The running counter shows the summed figure, since each district "adds" its own acreage as it appears.
 - Overlap was measured directly with a polygon union (`shapely`); only those three pairs overlap by more than half an acre.
 
