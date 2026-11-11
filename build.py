@@ -17,16 +17,24 @@ Usage:
     python3 build.py            # uses cached data/hd_arcgis.geojson if present
     python3 build.py --fetch    # re-download from the live ArcGIS service
 
-Requires: pyproj  (pip install pyproj)
+Requires: pyproj, shapely  (pip install pyproj shapely)
 """
 import json, os, sys, urllib.request, urllib.parse, datetime
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 RAW  = os.path.join(HERE, "data", "hd_arcgis.geojson")
+LAND = os.path.join(HERE, "data", "borough_boundaries.geojson")
+META = os.path.join(HERE, "data", "fetch_meta.json")
 OUT  = os.path.join(HERE, "districts.json")
 
 SERVICE = ("https://services5.arcgis.com/Oos4pNA2538iVFA1/arcgis/rest/services/"
            "Historic_Districts/FeatureServer/0/query")
+LAYER_INFO = ("https://services5.arcgis.com/Oos4pNA2538iVFA1/arcgis/rest/services/"
+              "Historic_Districts/FeatureServer/0?f=json")
+# DCP Borough Boundaries, water areas excluded (NYC Open Data gthc-hcne)
+LAND_URL = "https://data.cityofnewyork.us/api/geospatial/gthc-hcne?method=export&format=GeoJSON"
+LAND_BORO = {"Manhattan": "Manhattan", "Brooklyn": "Brooklyn", "Queens": "Queens",
+             "Bronx": "The Bronx", "Staten Island": "Staten Island"}
 PARAMS = {
     "where": "STATUS_OF_='DESIGNATED' AND CURRENT_='Yes'",
     "outFields": "AREA_NAME,DESIG_DATE,BOROUGH,EXTENSION,LP_NUMBER,Report_URL",
@@ -52,13 +60,25 @@ def iso(ms):
     return datetime.datetime.utcfromtimestamp(ms / 1000).strftime("%Y-%m-%d")
 
 def main():
+    def get(url):
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req) as r:
+            return r.read()
+
     if "--fetch" in sys.argv or not os.path.exists(RAW):
         os.makedirs(os.path.dirname(RAW), exist_ok=True)
         url = SERVICE + "?" + urllib.parse.urlencode(PARAMS)
         print("Downloading", url)
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-        with urllib.request.urlopen(req) as r, open(RAW, "wb") as f:
-            f.write(r.read())
+        open(RAW, "wb").write(get(url))
+        info = json.loads(get(LAYER_INFO))
+        edited = (info.get("editingInfo") or {}).get("dataLastEditDate")
+        json.dump({"retrieved": datetime.date.today().isoformat(),
+                   "layer_edited": iso(edited) if edited else None},
+                  open(META, "w"), indent=1)
+    if "--fetch" in sys.argv or not os.path.exists(LAND):
+        print("Downloading", LAND_URL)
+        open(LAND, "wb").write(get(LAND_URL))
+    fetch_meta = json.load(open(META)) if os.path.exists(META) else {}
 
     from pyproj import Geod
     g = Geod(ellps="WGS84")
@@ -114,31 +134,62 @@ def main():
 
     feats.sort(key=lambda f: (f["properties"]["date"], f["properties"]["name"]))
 
-    # net = each district's NEW footprint (its area minus any ground already covered by an
-    # earlier-designated district). Summed chronologically it equals the union footprint, so a
-    # running total / per-borough % never double-counts the few overlapping districts. Needs shapely.
+    # Overlap and water. A few districts overlap, and a few boundaries reach into the water.
+    #   net     = each district's NEW footprint: its area minus ground already covered by an
+    #             earlier-designated district. Summed chronologically it equals the union, so the
+    #             running acreage counter never double-counts overlapping districts.
+    #   netLand = the same, clipped to land (DCP borough boundaries, water excluded). Used for the
+    #             "% of borough land" chips, whose denominator is that same land boundary.
     from shapely.geometry import shape
     from shapely.ops import unary_union
     def gac(geom):
+        if geom.is_empty: return 0.0
         a, _ = g.geometry_area_perimeter(geom)
         return abs(a) / ACRE_M2
-    acc = None
+    land_feats = json.load(open(LAND))["features"]
+    land = unary_union([shape(f["geometry"]).buffer(0) for f in land_feats])
+    boro_land = {}
+    for lf in land_feats:
+        b = LAND_BORO[lf["properties"]["boroname"]]
+        boro_land[b] = round(boro_land.get(b, 0) + gac(shape(lf["geometry"]).buffer(0)), 1)
+    acc = None; acc_land = None
     for f in feats:
         gm = shape(f["geometry"]).buffer(0)
+        gl = gm.intersection(land)
         if acc is None:
-            net = gac(gm); acc = gm
+            net, net_land = gac(gm), gac(gl)
+            acc, acc_land = gm, gl
         else:
-            inter = gm.intersection(acc)
-            net = gac(gm) - (gac(inter) if not inter.is_empty else 0.0)
-            acc = unary_union([acc, gm])
+            net = gac(gm) - gac(gm.intersection(acc))
+            net_land = gac(gl) - gac(gl.intersection(acc_land))
+            acc = unary_union([acc, gm]); acc_land = unary_union([acc_land, gl])
         f["properties"]["net"] = round(max(net, 0.0), 2)
+        f["properties"]["netLand"] = round(max(net_land, 0.0), 2)
 
-    json.dump({"type": "FeatureCollection", "features": feats},
+    P = [f["properties"] for f in feats]
+    meta = {
+        "retrieved": fetch_meta.get("retrieved"),
+        "layer_edited": fetch_meta.get("layer_edited"),
+        "count": len(P),
+        "extensions": sum(p["ext"] for p in P),
+        "first": {"name": P[0]["name"], "date": P[0]["date"]},
+        "last": [{"name": p["name"], "date": p["date"]} for p in P if p["date"] == P[-1]["date"]],
+        "sum_acres": round(sum(p["acres"] for p in P), 1),
+        "unique_acres": round(sum(p["net"] for p in P), 1),
+        "unique_land_acres": round(sum(p["netLand"] for p in P), 1),
+        "boro_land_acres": boro_land,
+    }
+
+    json.dump({"type": "FeatureCollection", "meta": meta, "features": feats},
               open(OUT, "w"), separators=(",", ":"))
     tot = sum(f["properties"]["acres"] for f in feats)
-    net_tot = sum(f["properties"]["net"] for f in feats)
     print(f"Wrote {len(feats)} districts -> {OUT} ({os.path.getsize(OUT)//1024} KB)")
-    print(f"Total: {tot:,.0f} acres sum · {net_tot:,.0f} acres unique ({net_tot/640:.2f} sq mi)")
+    print(f"Total: {tot:,.0f} acres summed · {meta['unique_acres']:,.0f} unique "
+          f"({meta['unique_acres']/640:.2f} sq mi) · {meta['unique_land_acres']:,.0f} unique on land")
+    for b, a in boro_land.items():
+        n = sum(p["netLand"] for p in P if p["boro"] == b)
+        print(f"  {b}: {n:,.0f} of {a:,.0f} land acres = {n/a*100:.2f}%")
+    print("Meta:", json.dumps({k: meta[k] for k in ("retrieved", "layer_edited", "count", "extensions")}))
 
 if __name__ == "__main__":
     main()

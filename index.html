@@ -78,6 +78,7 @@
   .boro .pct{color:var(--amber);font-weight:600;font-variant-numeric:tabular-nums;
     font-size:11px;min-width:38px;text-align:right}
   .boro .dot{width:9px;height:9px;border-radius:50%}
+  .boro .ab{display:none;color:var(--paper-dim);font-weight:600;letter-spacing:.04em}
   #boros .caption{font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;
     color:#8a7d63;text-align:right;padding:0 2px;margin-top:1px;font-weight:600}
 
@@ -170,14 +171,50 @@
   @media (max-width:720px){
     #mast{max-width:100vw;padding:14px 16px 22px}
     #mast p{display:none}
-    #boros{top:auto;bottom:186px;right:10px}
-    .boro{min-width:auto;padding:5px 8px;font-size:11px}
+    #boros{top:auto;bottom:192px;right:10px;gap:4px}
+    .boro{min-width:auto;padding:4px 8px;font-size:11px;gap:6px}
     .boro .nm{display:none}
-    #readout{bottom:176px;left:16px}
+    .boro .ab{display:inline;min-width:20px}
+    #boros .caption{font-size:8.5px}
+    #readout{bottom:192px;left:16px}
     #year{font-size:clamp(48px,16vw,72px)}
+    #acres{font-size:17px;margin-top:6px}
+    #acres b{font-size:20px}
     #legend{padding-left:0;justify-content:center}
     #speedwrap{display:none}
-    .leaflet-bottom.leaflet-right{bottom:150px}
+    /* pinch to zoom on phones; the +/- buttons collided with the borough chips */
+    .leaflet-control-zoom{display:none}
+    .leaflet-bottom.leaflet-right{bottom:148px;right:0}
+    .leaflet-control-attribution{font-size:9px;line-height:1.3;max-width:100vw}
+    #about{padding:12px}
+    #about .card{padding:22px 18px;max-height:92vh}
+    #about h2{font-size:22px;padding-right:28px}
+    #about .close{top:10px;right:12px}
+  }
+
+  /* phones held sideways and other short screens: compact everything so the map shows */
+  @media (max-height:500px){
+    #mast{padding:10px 14px 14px;max-width:min(60ch,70vw)}
+    #mast p{display:none}
+    #mast h1{font-size:22px;margin:0 0 2px}
+    #mast .btns{margin-top:6px}
+    .ghost{padding:5px 10px;font-size:11px}
+    #readout{bottom:82px;left:16px}
+    #year{font-size:42px}
+    #acres{font-size:15px;margin-top:4px}
+    #acres b{font-size:17px}
+    #tally{font-size:11.5px}
+    #latest{display:none}
+    #boros{top:8px;bottom:auto;right:10px;gap:3px}
+    .boro{padding:3px 8px;font-size:11px;min-width:auto}
+    .boro .nm{display:none}
+    .boro .ab{display:inline;min-width:20px}
+    #legend{display:none}
+    #dock{padding:6px 14px 8px}
+    #controls{margin-bottom:0}
+    .leaflet-control-zoom{display:none}
+    .leaflet-bottom.leaflet-right{bottom:74px;right:0}
+    .leaflet-control-attribution{font-size:9px}
   }
 </style>
 </head>
@@ -187,7 +224,7 @@
 <header id="mast">
   <p class="kicker">Sixty years of preservation</p>
   <h1>The landmarking of New York</h1>
-  <p>All 159 historic districts and extensions the Landmarks Preservation Commission has declared since 1965 — some 4,570 acres, from Brooklyn Heights onward. Press play to watch the map fill in.</p>
+  <p>All <span data-k="count">159</span> historic districts and extensions the Landmarks Preservation Commission has declared since 1965, some <span data-k="acresAbout">4,560</span> acres, from Brooklyn Heights onward. Press play to watch the map fill in.</p>
   <div class="btns">
     <button class="ghost" id="aboutBtn">About &amp; sources</button>
     <button class="ghost" id="resetBtn">Restart</button>
@@ -199,7 +236,7 @@
 <div id="readout">
   <div id="year">1965</div>
   <div id="acres"><b id="acresNum">0</b> acres landmarked</div>
-  <div id="tally"><b id="count">0</b> of 159 districts · <span id="sqmi">0.0</span> sq mi</div>
+  <div id="tally"><b id="count">0</b> of <span data-k="count">159</span> districts · <span id="sqmi">0.0</span> sq mi</div>
   <div id="latest"></div>
 </div>
 
@@ -229,28 +266,30 @@
   <div class="card">
     <button class="close" id="aboutClose">×</button>
     <h2>The landmarking of New York</h2>
-    <p class="sub">An animated map of all 159 of the city's historic districts and extensions, and when each was declared.</p>
+    <p class="sub">An animated map of all <span data-k="count">159</span> of the city’s historic districts and extensions, and when each was declared.</p>
 
-    <h4>What this shows</h4>
-    <p>Each shape is a New York City <b>historic district</b> — an area the Landmarks Preservation Commission (LPC) has designated so that changes to its buildings are regulated. Districts light up on the map in the order they were declared, colored by the decade of designation. Hover a district for its name, year and size; click it to pin the panel and open its LPC designation report and Wikipedia page. This map covers only <b>designated, currently active</b> historic districts — not individual landmarks, scenic landmarks, interior landmarks or areas that were merely proposed.</p>
+    <h4>The map</h4>
+    <p>Each shape is a New York City <b>historic district</b>, an area the Landmarks Preservation Commission (LPC) has designated so that changes to its buildings need the commission’s approval. The commission explains <a href="https://www.nyc.gov/site/lpc/designations/landmark-types-criteria.page" target="_blank" rel="noopener">what qualifies as a historic district</a> and <a href="https://www.nyc.gov/site/lpc/about/about-lpc.page" target="_blank" rel="noopener">what designation means</a>.</p>
+    <p>Districts light up in the order they were declared, colored by decade. Hover over a district (or tap it on a phone) for its name, date and size, with links to its LPC designation report and a Wikipedia search. The map includes only designated, currently active historic districts. It leaves out individual landmarks, interior landmarks, scenic landmarks and areas that were only proposed.</p>
 
-    <h4>The count</h4>
-    <p>This map draws all <b>159 historic districts and extensions</b> the commission has designated and keeps active — matching the LPC's own published count — declared between Nov. 23, 1965 (Brooklyn Heights, the first, about seven months after the Landmarks Law of April 1965) and Nov. 25, 2025. By borough: Manhattan 82, Brooklyn 47, Queens 14, The Bronx 13, Staten Island 3.</p>
-    <p><b>25</b> of the 159 are <b>extensions</b> of an earlier district, each carrying its own, later designation date and drawn as its own shape — so a district and its extensions light up in different years. (An earlier version of this map used NYC Open Data's consolidated export, which shows only 141 shapes because it omits about 18 extensions; this version uses the LPC's live mapping layer, which breaks every one out.)</p>
+    <h4>Count</h4>
+    <p>The map draws all <b><span data-k="count">159</span> historic districts and extensions</b> the commission has designated and keeps active. They were declared between <span data-k="firstDate">Nov. 23, 1965</span> (<span data-k="firstName">Brooklyn Heights</span>, the first, about seven months after the Landmarks Law of April 1965) and <span data-k="lastDate">Nov. 25, 2025</span> (<span data-k="lastName">Beverley Square West and Ditmas Park West</span>). By borough: <span data-k="boroCounts">Manhattan 82, Brooklyn 47, Queens 14, the Bronx 13, Staten Island 3</span>. The commission’s own count at the end of 2025 was also 159.</p>
+    <p><b><span data-k="extensions">25</span></b> of them are <b>extensions</b> of an earlier district. Each extension has its own, later designation date and its own shape, so a district and its extensions light up in different years.</p>
+    <p>An earlier version of this map used New York City Open Data’s Historic Districts dataset, which had 141 records when last checked in November 2026. It has no separate records for 12 extensions and six other districts that are in the LPC’s mapping layer. This version uses the LPC layer.</p>
 
     <h4>Acres landmarked</h4>
-    <p>The running acreage is the summed land area of every district shown, computed as the true <b>geodesic area</b> of each boundary polygon on the WGS84 ellipsoid. All 159 districts together cover <b>≈ 4,574 acres, about 7.1 square miles</b> — more than five times the size of Central Park (843 acres). A handful of older districts sit partly inside larger ones (e.g. Carnegie Hill within the Expanded Carnegie Hill district), so about 16 acres are counted in two districts; the unique protected land is closer to <b>4,557 acres</b>.</p>
+    <p>The running acreage counts each piece of ground once. A few older districts sit partly inside larger ones (Carnegie Hill inside the Expanded Carnegie Hill district, for example), so each district adds only ground that no earlier district covers. All the districts together cover <b>about <span data-k="uniqueAcres">4,557</span> acres, or <span data-k="sqmi">7.1</span> square miles</b>, a little more than <span data-k="parks">five</span> times the size of Central Park (843 acres). Adding up every district’s full area, with the overlaps counted twice, gives <span data-k="sumAcres">4,574</span> acres. The size shown for a single district is its full area. Areas are measured on the curved surface of the earth from the LPC’s boundary shapes.</p>
 
     <h4>Share of each borough landmarked</h4>
-    <p>The <b>% on each borough chip</b> is the share of that borough's <b>land</b> that sits inside a historic district — the district footprint (counting overlapping districts only once) over the borough's land area (2020 Census). At full extent: <b>Manhattan 12.4%</b> (about one acre in eight), <b>Brooklyn 3.2%</b>, <b>Staten Island 1.1%</b>, <b>Queens 1.0%</b>, <b>The Bronx 1.0%</b> — and <b>2.4%</b> citywide. The figure climbs as districts appear.</p>
+    <p>The percentage on each borough chip is the share of that borough’s <b>land</b> inside a historic district. Both parts of the fraction use the Department of City Planning’s borough boundaries, which exclude water. District shapes are clipped to those boundaries, which removes about <span data-k="water">18</span> acres of water (mostly in the Douglaston and South Street Seaport districts), and overlapping districts count once. At full extent: <span data-k="boroPcts">Manhattan 12.3%, Brooklyn 3.2%, Staten Island 1.1%, Queens 1.0%, the Bronx 1.0%</span>; <span data-k="cityPct">2.3%</span> citywide. The percentages climb as districts appear.</p>
 
     <h4>Sources</h4>
-    <p>Boundaries, designation dates, district names and the official report links come straight from the LPC's <b>own live ArcGIS layer</b> (<code>Historic_Districts_LPC</code>) — the data behind the commission's official <a href="https://www.landmarks.nyc/" target="_blank" rel="noopener">Discover NYC Landmarks</a> map, reached from the LPC <a href="https://www.nyc.gov/site/lpc/designations/maps.page" target="_blank" rel="noopener">maps page</a>. "Designation report" links open the commission's official PDF for each district; "Wikipedia" links run a title search. Base map tiles: OpenStreetMap contributors and CARTO.</p>
+    <p>Boundaries, designation dates, district names and report links come from the LPC’s own ArcGIS mapping layer (<code>Historic_Districts_LPC</code>), which also runs the commission’s <a href="https://www.landmarks.nyc/" target="_blank" rel="noopener">Discover NYC Landmarks</a> map, linked from the LPC <a href="https://www.nyc.gov/site/lpc/designations/maps.page" target="_blank" rel="noopener">maps page</a>. <b>This page shows a saved copy of that data, retrieved <span data-k="retrieved">Nov. 11, 2026</span></b>. The commission last updated its layer on <span data-k="layerEdited">Dec. 4, 2025</span>, and the copy here is refreshed by hand when the LPC designates new districts. Borough land boundaries come from the Department of City Planning, via <a href="https://data.cityofnewyork.us/d/gthc-hcne" target="_blank" rel="noopener">New York City Open Data</a>. “Designation report” links open the commission’s PDF for each district; “Wikipedia” links run a title search. Base map tiles: OpenStreetMap contributors and CARTO.</p>
 
-    <h4>Notes &amp; caveats</h4>
-    <p>The designation date shown is the day the commission voted to designate each area. Boundary polygons are derived by the LPC primarily from Department of City Planning tax-lot data and are simplified slightly here for the web (coordinates rounded to five decimals). Some designations have complicated histories (amended, re-designated or overturned); this map reflects only the districts the LPC currently marks as designated and active.</p>
+    <h4>Notes and caveats</h4>
+    <p>The designation date is the day the commission voted to designate each area. The LPC draws its boundary shapes mainly from Department of City Planning tax-lot data, and this map rounds their coordinates for the web, so they are approximate; the designation reports give the legal boundaries. Some designations have complicated histories (amended, re-designated or overturned). The map reflects only the districts the LPC currently marks as designated and active.</p>
 
-    <div class="aicaution"><b>A note on AI:</b> This map was built with the help of AI. The underlying data is straight from the city's Landmarks Preservation Commission, but the processing and code have not been exhaustively hand-audited. Check any figure against the source dataset before relying on it.</div>
+    <div class="aicaution"><b>Use of AI.</b> This map was built with the help of AI. The data comes directly from the Landmarks Preservation Commission, but the processing and code have not been fully checked by hand. Check any figure against the source before relying on it.</div>
   </div>
 </div>
 
@@ -259,9 +298,9 @@
 const ERA_COLORS={'1965–1969':'#c1440e','1970s':'#e05a17','1980s':'#ef7d1a','1990s':'#f59e1f','2000s':'#f6bb3a','2010s':'#f2d661','2020s':'#fbefb0'};
 const BORO_COLORS={'Manhattan':'#f2b134','Brooklyn':'#e8701f','Queens':'#f2d661','The Bronx':'#c1440e','Staten Island':'#f6bb3a'};
 const BOROS=['Manhattan','Brooklyn','Queens','The Bronx','Staten Island'];
-// borough LAND area in acres (2020 Census land area, sq mi × 640), for the "% landmarked" readout
-const BORO_LAND_AC={'Manhattan':22.7*640,'Brooklyn':69.4*640,'Queens':108.7*640,'The Bronx':42.2*640,'Staten Island':57.5*640};
-const START=1965, END=2026; // exclusive-ish upper bound for the scrub range
+// borough LAND area in acres (DCP borough boundaries, water excluded); read from districts.json meta
+let BORO_LAND_AC={}, META={};
+const START=1965; let END=2026; // exclusive upper bound of the scrub range: set to (newest year + 1) from the data
 
 const MONTHS=['Jan.','Feb.','March','April','May','June','July','Aug.','Sept.','Oct.','Nov.','Dec.'];
 function apDate(iso){const [y,m,d]=iso.split('-').map(Number);return `${MONTHS[m-1]} ${d}, ${y}`;}
@@ -269,11 +308,12 @@ function reportURL(lp){if(!lp)return null;const n=parseInt(String(lp).replace(/[
 function fmtAcres(a){return a>=10?Math.round(a).toLocaleString('en-US'):a.toFixed(1);}
 function toNum(iso){const [y,m,d]=iso.split('-').map(Number);return y+(m-1)/12+(d-1)/365;} // fractional year
 
-const map=L.map('map',{zoomControl:false,attributionControl:true,minZoom:10,maxZoom:17,
+const SMALL=matchMedia('(max-width:720px)').matches;
+const map=L.map('map',{zoomControl:false,attributionControl:true,minZoom:SMALL?9:10,maxZoom:17,
   zoomSnap:.25,scrollWheelZoom:true,preferCanvas:false}).setView([40.718,-73.98],11.4);
 L.control.zoom({position:'bottomright'}).addTo(map);
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=cb1_2r82_1_ae4e70b6166057bc41b89638',{
-  attribution:'&copy; OpenStreetMap contributors &copy; CARTO · Data: NYC Landmarks Preservation Commission',
+  attribution:'&copy; OpenStreetMap &copy; CARTO',
   subdomains:'abcd',maxZoom:19,className:'warm-tiles'}).addTo(map);
 
 let FEATS=[], geoLayer=null, layersByIdx=[];
@@ -286,7 +326,9 @@ let lastShownCount=0;
 const $=id=>document.getElementById(id);
 
 fetch('districts.json').then(r=>r.json()).then(gj=>{
-  FEATS=gj.features;
+  FEATS=gj.features; META=gj.meta||{}; BORO_LAND_AC=META.boro_land_acres||{};
+  END=Math.max(...FEATS.map(f=>f.properties.year))+1;
+  fillCopy();
   FEATS.forEach((f,i)=>{f.properties._i=i;f.properties._n=toNum(f.properties.date);});
   buildBoros();
   buildTimeline();
@@ -294,7 +336,8 @@ fetch('districts.json').then(r=>r.json()).then(gj=>{
     const i=feat.properties._i, p=feat.properties;
     layersByIdx[i]=layer;
     layer.bindPopup(popupHTML(p),{className:'hd-pop',maxWidth:250,minWidth:190,
-      autoPan:false,closeButton:true,offset:[0,-2]});
+      autoPan:SMALL,autoPanPaddingTopLeft:[10,110],autoPanPaddingBottomRight:[10,210],
+      closeButton:true,offset:[0,-2]});
     // hover to open (with intent delay so the links stay reachable); tap opens on touch
     layer.on('mouseover',e=>{if(!shownFor(p))return;
       if(hideTimer){clearTimeout(hideTimer);hideTimer=null;}
@@ -306,6 +349,8 @@ fetch('districts.json').then(r=>r.json()).then(gj=>{
       layer.openPopup(e.latlng);});
     layer.on('popupclose',()=>{if(pinned===i){pinned=null;restyleOne(i);}});
   }}).addTo(map);
+  if(SMALL) map.fitBounds(geoLayer.getBounds(),{paddingTopLeft:[8,100],paddingBottomRight:[8,200]});
+  if(SMALL) map.attributionControl.setPrefix(false);
   // cancel auto-close while the cursor is over the popup itself (so you can click links)
   map.on('popupopen',e=>{const el=e.popup.getElement();if(!el)return;
     el.addEventListener('mouseenter',()=>{if(hideTimer){clearTimeout(hideTimer);hideTimer=null;}});
@@ -317,6 +362,35 @@ fetch('districts.json').then(r=>r.json()).then(gj=>{
   setTimeout(fix,200); window.addEventListener('load',fix);
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')fix();});
 });
+
+/* ---------- page copy derived from the data (so a rebuild can't leave stale numbers) ---------- */
+function fillCopy(){
+  const P=FEATS.map(f=>f.properties), n=x=>Math.round(x).toLocaleString('en-US');
+  const sum=P.reduce((a,p)=>a+p.acres,0), uniq=P.reduce((a,p)=>a+p.net,0), uland=P.reduce((a,p)=>a+p.netLand,0);
+  const short=nm=>nm.replace(/ Historic District( Extensions?)?.*$/,'');
+  const and=a=>a.length<2?a.join(''):a.slice(0,-1).join(', ')+' and '+a[a.length-1];
+  const last=P.filter(p=>p.date===P[P.length-1].date);
+  const ct={},la={};BOROS.forEach(b=>{ct[b]=0;la[b]=0;});P.forEach(p=>{ct[p.boro]++;la[p.boro]+=p.netLand;});
+  const bn=b=>b==='The Bronx'?'the Bronx':b;
+  const pct=b=>(la[b]/BORO_LAND_AC[b]*100).toFixed(1)+'%';
+  const landTot=BOROS.reduce((a,b)=>a+(BORO_LAND_AC[b]||0),0);
+  const words=['zero','one','two','three','four','five','six','seven','eight','nine','ten'];
+  const k={
+    count:String(P.length), acresAbout:n(Math.round(uniq/10)*10),
+    firstDate:apDate(P[0].date), firstName:short(P[0].name),
+    lastDate:apDate(last[0].date), lastName:and(last.map(p=>short(p.name))),
+    boroCounts:BOROS.map(b=>`${bn(b)} ${ct[b]}`).join(', '),
+    extensions:String(P.filter(p=>p.ext).length),
+    uniqueAcres:n(uniq), sqmi:(uniq/640).toFixed(1), sumAcres:n(sum),
+    parks:words[Math.floor(uniq/843)]||String(Math.floor(uniq/843)),
+    water:n(uniq-uland),
+    boroPcts:BOROS.slice().sort((a,b)=>la[b]/BORO_LAND_AC[b]-la[a]/BORO_LAND_AC[a]).map(b=>`${bn(b)} ${pct(b)}`).join(', '),
+    cityPct:(uland/landTot*100).toFixed(1)+'%',
+    retrieved:META.retrieved?apDate(META.retrieved):'', layerEdited:META.layer_edited?apDate(META.layer_edited):'',
+  };
+  document.querySelectorAll('[data-k]').forEach(el=>{const v=k[el.dataset.k];if(v)el.textContent=v;});
+  if(META.retrieved) map.attributionControl.addAttribution(`Data: New York City Landmarks Preservation Commission, retrieved ${apDate(META.retrieved)}`);
+}
 
 function isShown(p){return showAll || p._n<=cursor;}
 function shownFor(p){return isShown(p) && !boroOff.has(p.boro);}
@@ -347,7 +421,7 @@ function restyleAll(){if(!geoLayer)return;geoLayer.eachLayer(applyStyle);}
 /* ---------- counters ---------- */
 function updateCounters(){
   const boroCt={}, boroAc={}; BOROS.forEach(b=>{boroCt[b]=0;boroAc[b]=0;}); let total=0, ac=0;
-  for(const f of FEATS){const p=f.properties; if(isShown(p)&&!boroOff.has(p.boro)){total++;ac+=p.acres;boroCt[p.boro]++;boroAc[p.boro]+=p.net;}}
+  for(const f of FEATS){const p=f.properties; if(isShown(p)&&!boroOff.has(p.boro)){total++;ac+=p.net;boroCt[p.boro]++;boroAc[p.boro]+=p.netLand;}}
   // latest = last declared at/under cursor (regardless of boro filter, for the ticker)
   let latest=null;
   for(const f of FEATS){const p=f.properties; if(p._n<=cursor||showAll){if(!latest||p._n>latest._n)latest=p;}}
@@ -374,7 +448,8 @@ function buildBoros(){
   wrap.innerHTML='';
   BOROS.forEach(b=>{
     const el=document.createElement('div');el.className='boro';el.dataset.b=b;
-    el.innerHTML=`<span class="ct">0</span><span class="nm">${b}</span><span class="pct">0%</span><span class="dot" style="background:${BORO_COLORS[b]}"></span>`;
+    const AB={'Manhattan':'MN','Brooklyn':'BK','Queens':'QN','The Bronx':'BX','Staten Island':'SI'};
+    el.innerHTML=`<span class="ab">${AB[b]}</span><span class="ct">0</span><span class="nm">${b}</span><span class="pct">0%</span><span class="dot" style="background:${BORO_COLORS[b]}"></span>`;
     el.title=`Toggle ${b} (${counts[b]} districts)`;
     el.onclick=()=>{if(boroOff.has(b)){boroOff.delete(b);el.classList.remove('off');}else{boroOff.add(b);el.classList.add('off');}updateAll();};
     wrap.appendChild(el);
@@ -411,11 +486,12 @@ function buildTimeline(){
   bl.setAttribute('x1',PAD);bl.setAttribute('x2',tlW-PAD);bl.setAttribute('y1',baseY+.5);bl.setAttribute('y2',baseY+.5);
   bl.setAttribute('stroke','rgba(233,206,158,.22)');bl.setAttribute('stroke-width','1');TL.appendChild(bl);
   // decade labels
-  [1965,1975,1985,1995,2005,2015,2025].forEach(y=>{
+  const labs=[];for(let y=START;y<END;y+=10)labs.push(y);
+  labs.forEach(y=>{
     const t=document.createElementNS(NS,'text');
     t.setAttribute('x',yearX(y));t.setAttribute('y',tlH-2);t.setAttribute('fill','#8a7d63');
     t.setAttribute('font-size','9');t.setAttribute('font-family','Archivo,sans-serif');
-    t.setAttribute('text-anchor', y===1965?'start':y===2025?'end':'middle');
+    t.setAttribute('text-anchor', y===START?'start':y>=END-2?'end':'middle');
     t.textContent=`’${String(y).slice(2)}`;TL.appendChild(t);
   });
   // playhead
